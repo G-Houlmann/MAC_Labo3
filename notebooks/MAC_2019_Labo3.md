@@ -114,6 +114,7 @@ Steps:
 
 ```scala
 // TODO students
+rddMovies.filter(_.title.contains("City")).map(_.title).foreach(println)
 ```
 
 <!-- #region -->
@@ -143,6 +144,9 @@ Steps:
 
 ```scala
 // TODO student
+val rateMin = 3.3
+val rateMax = 5.7
+rddMovies.filter(m => m.rating > rateMin && m.rating <= rateMax).sortBy(_.rating).map(m => (m.rating, m.title)).foreach(println)
 ```
 
 <!-- #region -->
@@ -196,6 +200,8 @@ Steps:
 
 ```scala
 // TODO student
+val amountToShow = 5
+rddMovies.flatMap(_.genres).map(m => (m.trim(), 1)).reduceByKey((x,y) => x+y).sortBy(_._2, ascending=false).take(amountToShow).foreach(println)
 ```
 
 <!-- #region -->
@@ -251,6 +257,8 @@ Steps:
 
 ```scala
 // TODO student
+rddMovies.map(m => (m.year, (m.votes, 1))).reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2)).mapValues({case (v, c) => v.toFloat/c}).sortBy(_._2, ascending=false).map({case (y, v) => "year: " + y + " average votes: " + v}).foreach(println)
+
 ```
 
 ## Part 2 - Create a basic Inverted Index
