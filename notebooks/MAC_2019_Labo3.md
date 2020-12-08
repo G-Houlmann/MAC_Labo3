@@ -312,12 +312,13 @@ Steps
         
         // Split the given string into an array of words (without any formatting), then return it.
         def tokenizeDescription(description: String): Seq[String] = {
-            // TODO student
+            return description.split(" ")
         }
         
         // Remove the blank spaces (trim) in the given word, transform it in lowercase, then return it.
         def normalizeWord(word: String): String = {
-            // TODO student
+            val toRemove = ",;'.:!?".toSet
+            return word.toLowerCase().trim().filterNot(toRemove)
         }
         
         // For the sake of simplicity let's ignore the implementation (in a real case we would return true if w is a stopword, otherwise false).
@@ -350,7 +351,7 @@ Steps
        //          ("mange", [120]),
        //          ...
        //        ]
-       val invertedIndex = ...
+       val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).map(pair => pair.swap).groupByKey()
 
        // Return the new-built inverted index.
        invertedIndex
@@ -367,7 +368,7 @@ def topN(invertedIndex: RDD[(String, Iterable[Int])], N: Int): Unit = {
   // We are going to work on the given invertedIndex array to do our analytic:
   //   1) Find a way to get the number of movie in which a word appears.
   //   2) Keep only the top N words and their occurence.
-  val topMovies = ...
+  val topMovies = invertedIndex.mapValues(x => x.size).sortBy(_._2, ascending = false).take(N)
   
   // Print the words and the number of descriptions in which they appear.
   println("Top '" + N + "' most used words")
