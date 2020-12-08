@@ -70,7 +70,25 @@ def createInvertedIndex(movies: RDD[Movie]): RDD[(String, Iterable[Int])] = {
        //          ("mange", [120]),
        //          ...
        //        ]
-        val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).map(pair => pair.swap)
+       val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).map(pair => pair.swap).groupByKey()//.map(x => (x._1, x._2.toList))
+
        // Return the new-built inverted index.
        invertedIndex
   }
+
+
+
+
+  // TODO student
+// Here we are going to operate the analytic and display its result on a given inverted index (that will be obtained from the previous function).
+def topN(invertedIndex: RDD[(String, Iterable[Int])], N: Int): Unit = {
+  // TODO student
+  // We are going to work on the given invertedIndex array to do our analytic:
+  //   1) Find a way to get the number of movie in which a word appears.
+  //   2) Keep only the top N words and their occurence.
+  val topMovies = invertedIndex.mapValues(x => x.size).sortBy(_._2, ascending = false).take(N)
+  
+  // Print the words and the number of descriptions in which they appear.
+  println("Top '" + N + "' most used words")
+  topMovies.foreach(println)
+}
