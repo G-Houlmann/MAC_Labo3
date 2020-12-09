@@ -351,7 +351,8 @@ Steps
        //          ("mange", [120]),
        //          ...
        //        ]
-       val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).map(pair => pair.swap).groupByKey()
+              val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).distinct().map(pair => pair.swap).groupByKey()//.map(x => (x._1, x._2.toList))
+
 
        // Return the new-built inverted index.
        invertedIndex
