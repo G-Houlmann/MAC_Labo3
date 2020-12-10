@@ -114,6 +114,7 @@ Steps:
 
 ```scala
 // TODO students
+rddMovies.filter(_.title.contains("City")).map(_.title).foreach(println)
 ```
 
 <!-- #region -->
@@ -143,6 +144,9 @@ Steps:
 
 ```scala
 // TODO student
+val rateMin = 3.3
+val rateMax = 5.7
+rddMovies.filter(m => m.rating > rateMin && m.rating <= rateMax).sortBy(_.rating).map(m => (m.rating, m.title)).foreach(println)
 ```
 
 <!-- #region -->
@@ -196,6 +200,8 @@ Steps:
 
 ```scala
 // TODO student
+val amountToShow = 5
+rddMovies.flatMap(_.genres).map(m => (m.trim(), 1)).reduceByKey((x,y) => x+y).sortBy(_._2, ascending=false).take(amountToShow).foreach(println)
 ```
 
 <!-- #region -->
@@ -251,6 +257,8 @@ Steps:
 
 ```scala
 // TODO student
+rddMovies.map(m => (m.year, (m.votes, 1))).reduceByKey((x, y) => (x._1 + y._1, x._2 + y._2)).mapValues({case (v, c) => v.toFloat/c}).sortBy(_._2, ascending=false).map({case (y, v) => "year: " + y + " average votes: " + v}).foreach(println)
+
 ```
 
 ## Part 2 - Create a basic Inverted Index
@@ -304,12 +312,13 @@ Steps
         
         // Split the given string into an array of words (without any formatting), then return it.
         def tokenizeDescription(description: String): Seq[String] = {
-            // TODO student
+            return description.split(" ")
         }
         
         // Remove the blank spaces (trim) in the given word, transform it in lowercase, then return it.
         def normalizeWord(word: String): String = {
-            // TODO student
+            val toRemove = ",;'.:!?".toSet
+            return word.toLowerCase().trim().filterNot(toRemove)
         }
         
         // For the sake of simplicity let's ignore the implementation (in a real case we would return true if w is a stopword, otherwise false).
@@ -342,7 +351,8 @@ Steps
        //          ("mange", [120]),
        //          ...
        //        ]
-       val invertedIndex = ...
+              val invertedIndex = rddMovies.map(m => (m.id, m.description)).flatMapValues(tokenizeDescription).mapValues(normalizeWord).filter(w => !isStopWord(w._2)).distinct().map(pair => pair.swap).groupByKey()//.map(x => (x._1, x._2.toList))
+
 
        // Return the new-built inverted index.
        invertedIndex
@@ -359,7 +369,7 @@ def topN(invertedIndex: RDD[(String, Iterable[Int])], N: Int): Unit = {
   // We are going to work on the given invertedIndex array to do our analytic:
   //   1) Find a way to get the number of movie in which a word appears.
   //   2) Keep only the top N words and their occurence.
-  val topMovies = ...
+  val topMovies = invertedIndex.mapValues(x => x.size).sortBy(_._2, ascending = false).take(N)
   
   // Print the words and the number of descriptions in which they appear.
   println("Top '" + N + "' most used words")
