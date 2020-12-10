@@ -394,7 +394,16 @@ For all of the following exercices, write your queries in two different ways:
 * Show the first 10 lines of the moviesDF as a table
 
 ```scala
-// TODO students
+println("Schema:")
+moviesDF.printSchema()
+
+moviesDF.createOrReplaceTempView("movies")
+println("SparkSQL version:")
+spark.sql("SELECT * FROM movies LIMIT 10").show()
+
+println("DataFrame API version:")
+moviesDF.limit(10).show()
+
 ```
 
 ### Exercice 2 - Get the movies (id, title, votes, director) whose title contains "City" 
@@ -406,19 +415,43 @@ Apply two different ways:
 
 
 ```scala
-// TODO students
+println("SparkSQL version:")
+spark.sql("SELECT Rank, Title, Votes, Director FROM movies WHERE Title LIKE '%City%'").show()
+
+println("DataFrame API version:")
+moviesDF.select("Rank", "Title", "Votes", "Director").where("Title LIKE '%City%'").show()
+
 ```
 
 ### Exercice 3 - Get the number of movies which have a number of votes between 500 and 2000 (inclusive range)
 
 ```scala
-// TODO students
+println("SparkSQL version:")
+spark.sql("SELECT COUNT(Rank) AS `Nb of movies` FROM movies WHERE Votes BETWEEN 500 AND 2000").show()
+
+println("DataFrame API version:")
+println("Number of movies: " + moviesDF.where($"Votes" >= 500 && $"Votes" <= 2000).count())
 ```
 
 ### Exercice 4 - Get the minimum, maximum and average rating of films per director. Sort the results by minimum rating.  
 
 ```scala
-// TODO students
+println("SparkSQL version:")
+spark.sql("SELECT Director, MIN(Metascore) AS `Min rating`, MAX(Metascore) AS `Max rating`, AVG(Metascore) AS `Avg rating`\n"
+          + "FROM movies\n"
+          + "WHERE Metascore IS NOT NULL\n"
+          + "GROUP BY Director\n"
+          + "ORDER BY `Min rating` ASC")
+        .show()
+
+println("DataFrame API version:")
+moviesDF.where($"Metascore".isNotNull)
+        .groupBy("Director")
+        .agg(min($"Metascore").as("Min rating"), 
+             max($"Metascore").as("Max rating"),
+             avg($"Metascore").as("Avg rating"))
+        .orderBy($"Min rating")
+        .show()
 ```
 
 <!-- #region -->
@@ -438,7 +471,28 @@ Apply two different ways:
 <!-- #endregion -->
 
 ```scala
-// TODO students
+println("SparkSQL version:")
+spark.sql("SELECT Title, m1.Year, Metascore\n"
+          + "FROM movies AS m1\n"
+          + "INNER JOIN (\n"
+                  + "SELECT Year, MIN(Metascore) AS `Min metascore`\n"
+                  + "FROM movies\n"
+                  + "GROUP BY Year\n"
+              + ") AS m2\n"
+              + "ON m1.Year == m2.Year\n"
+          + "WHERE Metascore == `Min metascore`"
+          + "ORDER BY Metascore ASC")
+        .show()
+
+println("DataFrame API version:")
+val minRatingPerYearDF = moviesDF.groupBy("Year").agg(min($"Metascore").as("Min metascore"))
+moviesDF.as("movies")
+        .join(minRatingPerYearDF, moviesDF("Year") === minRatingPerYearDF("Year").as("Y"))
+        .select("Title", "movies.Year", "Metascore")
+        .where($"Metascore" === $"Min metascore")
+        .orderBy($"Metascore")
+        .show()
+
 ```
 
 <!-- #region -->
@@ -463,9 +517,17 @@ Note that when using the dataframe API:
 <!-- #endregion -->
 
 ```scala
-// TODO students
-```
+println("SparkSQL version:")
+spark.sql("SELECT m1.Director AS Director1, m1.Title AS Title1, m2.Title AS Title2\n"
+          + "FROM movies AS m1\n"
+          + "LEFT JOIN movies AS m2\n"
+              + "ON m1.Director == m2.Director AND m1.Title != m2.Title")
+        .show()
 
-```scala
-
+println("DataFrame API version:")
+val minRatingPerYearDF = moviesDF.groupBy("Year").agg(min($"Metascore").as("Min metascore"))
+moviesDF.as("m1")
+        .join(moviesDF.as("m2"), $"m1.Director" === $"m2.Director" && ($"m1.Title" !== $"m2.title"), "left_outer")
+        .select(col("m1.Director").as("Director1"), col("m1.Title").as("Title1"), col("m2.Title").as("Title2"))
+        .show()
 ```
