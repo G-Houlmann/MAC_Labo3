@@ -535,7 +535,6 @@ spark.sql("SELECT m1.Director AS Director1, m1.Title AS Title1, m2.Title AS Titl
         .show()
 
 println("DataFrame API version:")
-val minRatingPerYearDF = moviesDF.groupBy("Year").agg(min($"Metascore").as("Min metascore"))
 moviesDF.as("m1")
         .join(moviesDF.as("m2"), $"m1.Director" === $"m2.Director" && ($"m1.Title" !== $"m2.title"), "left_outer")
         .select(col("m1.Director").as("Director1"), col("m1.Title").as("Title1"), col("m2.Title").as("Title2"))
