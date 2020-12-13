@@ -530,13 +530,13 @@ Note that when using the dataframe API:
 println("SparkSQL version:")
 spark.sql("SELECT m1.Director AS Director1, m1.Title AS Title1, m2.Title AS Title2\n"
           + "FROM movies AS m1\n"
-          + "LEFT JOIN movies AS m2\n"
+          + "INNER JOIN movies AS m2\n"
               + "ON m1.Director == m2.Director AND m1.Title != m2.Title")
         .show()
 
 println("DataFrame API version:")
 moviesDF.as("m1")
-        .join(moviesDF.as("m2"), $"m1.Director" === $"m2.Director" && ($"m1.Title" !== $"m2.title"), "left_outer")
+        .join(moviesDF.as("m2"), $"m1.Director" === $"m2.Director" && ($"m1.Title" !== $"m2.title"))
         .select(col("m1.Director").as("Director1"), col("m1.Title").as("Title1"), col("m2.Title").as("Title2"))
         .show()
 ```
